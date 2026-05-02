@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pickle
 import pandas as pd
@@ -5,45 +6,82 @@ import pandas as pd
 # Load model
 model = pickle.load(open("model.pkl", "rb"))
 
-# Page configuration
+# Page settings
 st.set_page_config(
-    page_title="AI-Based Nutrition Deficiency Prediction System",
-    layout="centered"
+    page_title="AI Nutrition Deficiency Prediction",
+    page_icon="🥗",
+    layout="wide"
 )
 
+# Custom CSS Styling
+st.markdown("""
+    <style>
+    .main {
+        background-color: #f5f7fa;
+    }
+    .title {
+        font-size: 48px;
+        font-weight: bold;
+        color: #2c3e50;
+        text-align: center;
+    }
+    .subtitle {
+        font-size: 20px;
+        color: #34495e;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .prediction-box {
+        padding: 20px;
+        border-radius: 10px;
+        background-color: #d4edda;
+        color: #155724;
+        font-size: 24px;
+        text-align: center;
+        font-weight: bold;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # Sidebar
+st.sidebar.image("https://cdn-icons-png.flaticon.com/512/1046/1046784.png", width=100)
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Go to", ["Home", "Prediction", "About"])
 
 # Home Page
 if page == "Home":
-    st.title("AI-Based Nutrition Deficiency Prediction System")
-    st.subheader("Predict potential nutritional deficiencies using AI")
-    
+    st.markdown('<div class="title">🥗 AI-Based Nutrition Deficiency Prediction System</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle">Smart healthcare powered by Machine Learning</div>', unsafe_allow_html=True)
+
     st.write("""
-    ### Features:
-    - Symptom-based prediction
-    - AI-powered deficiency detection
-    - Personalized health insights
-    - Easy-to-use interface
+    ### Key Features:
+    - Symptom-based AI prediction
+    - Personalized nutritional analysis
+    - Health awareness support
+    - User-friendly healthcare dashboard
     """)
+
+    st.info("This software helps identify potential nutritional deficiencies early for preventive healthcare.")
 
 # Prediction Page
 elif page == "Prediction":
-    st.title("Nutrition Deficiency Prediction")
+    st.markdown('<div class="title">Nutrition Deficiency Prediction</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle">Fill in your health details below</div>', unsafe_allow_html=True)
 
-    st.write("Fill in your health details below:")
+    col1, col2 = st.columns(2)
 
-    age = st.number_input("Age", min_value=1, max_value=100, value=25)
+    with col1:
+        age = st.number_input("Age", min_value=1, max_value=100, value=25)
+        gender = st.selectbox("Gender", ["Male", "Female"])
+        fatigue = st.selectbox("Do you experience fatigue?", ["No", "Yes"])
+        hair_loss = st.selectbox("Hair loss?", ["No", "Yes"])
+        bone_pain = st.selectbox("Bone pain?", ["No", "Yes"])
 
-    gender = st.selectbox("Gender", ["Male", "Female"])
-    fatigue = st.selectbox("Do you experience fatigue?", ["No", "Yes"])
-    hair_loss = st.selectbox("Hair loss?", ["No", "Yes"])
-    bone_pain = st.selectbox("Bone pain?", ["No", "Yes"])
-    weakness = st.selectbox("Weakness?", ["No", "Yes"])
-    low_sunlight = st.selectbox("Low sunlight exposure?", ["No", "Yes"])
-    vegetarian = st.selectbox("Vegetarian diet?", ["No", "Yes"])
-    appetite_loss = st.selectbox("Appetite loss?", ["No", "Yes"])
+    with col2:
+        weakness = st.selectbox("Weakness?", ["No", "Yes"])
+        low_sunlight = st.selectbox("Low sunlight exposure?", ["No", "Yes"])
+        vegetarian = st.selectbox("Vegetarian diet?", ["No", "Yes"])
+        appetite_loss = st.selectbox("Appetite loss?", ["No", "Yes"])
 
     # Convert inputs
     fatigue_val = 1 if fatigue == "Yes" else 0
@@ -68,36 +106,46 @@ elif page == "Prediction":
         "Gender_Male": 1 if gender == "Male" else 0
     }])
 
-    # Prediction
     if st.button("Predict Deficiency"):
         prediction = model.predict(input_data)[0]
 
-        st.success(f"Predicted Nutritional Deficiency: {prediction}")
+        st.markdown(f'<div class="prediction-box">Predicted Nutritional Deficiency: {prediction}</div>', unsafe_allow_html=True)
 
-        # Suggestions
+        # Severity score
+        symptom_score = sum([
+            fatigue_val, hair_loss_val, bone_pain_val,
+            weakness_val, sunlight_val, vegetarian_val, appetite_val
+        ])
+
+        st.progress(min(symptom_score / 7, 1.0))
+
+        st.metric("Risk Score", f"{symptom_score}/7")
+
+        # Recommendations
         if prediction == "Iron":
-            st.info("Possible signs indicate Iron deficiency. Focus on spinach, lentils, beans, red meat, and iron supplements.")
+            st.warning("Increase spinach, beans, lentils, red meat, and iron-rich foods.")
         elif prediction == "Vitamin D":
-            st.info("Possible Vitamin D deficiency. Increase sunlight exposure, eggs, fish, and fortified dairy.")
+            st.warning("Increase sunlight exposure, fish, eggs, and fortified dairy.")
         elif prediction == "Calcium":
-            st.info("Possible Calcium deficiency. Consume milk, yogurt, cheese, almonds, and leafy greens.")
+            st.warning("Consume milk, yogurt, almonds, and leafy greens.")
         elif prediction == "Protein":
-            st.info("Possible Protein deficiency. Increase eggs, legumes, chicken, fish, and nuts.")
+            st.warning("Focus on eggs, legumes, chicken, nuts, and dairy.")
         elif prediction == "B12":
-            st.info("Possible Vitamin B12 deficiency. Focus on dairy, eggs, fish, and fortified cereals.")
+            st.warning("Consume dairy, eggs, fish, and fortified cereals.")
 
 # About Page
 elif page == "About":
-    st.title("About This Project")
+    st.markdown('<div class="title">About This Project</div>', unsafe_allow_html=True)
 
     st.write("""
-    This AI-based software predicts possible nutritional deficiencies using machine learning.
+    ### Project Objective:
+    This AI-powered system predicts nutritional deficiencies using symptom analysis and machine learning.
 
     ### Technologies Used:
     - Python
-    - Pandas
-    - Scikit-learn
     - Streamlit
+    - Scikit-learn
+    - Pandas
 
     ### Deficiencies Covered:
     - Iron
@@ -106,6 +154,9 @@ elif page == "About":
     - Protein
     - Vitamin B12
 
-    ### Objective:
-    Early detection of nutritional deficiencies for preventive healthcare.
+    ### Purpose:
+    Early health awareness and preventive nutrition support.
     """)
+
+    st.success("Developed as an AI mini project for healthcare innovation.")
+```
