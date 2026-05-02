@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import pickle
 import pandas as pd
@@ -159,4 +158,3 @@ elif page == "About":
     """)
 
     st.success("Developed as an AI mini project for healthcare innovation.")
-```
