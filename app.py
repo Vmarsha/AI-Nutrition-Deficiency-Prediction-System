@@ -2,8 +2,9 @@ import streamlit as st
 import pickle
 import pandas as pd
 
-# Load model
+# Load model and feature columns
 model = pickle.load(open("model.pkl", "rb"))
+feature_columns = pickle.load(open("feature_columns.pkl", "rb"))
 
 # Page settings
 st.set_page_config(
@@ -12,14 +13,14 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS Styling
+# Custom CSS
 st.markdown("""
     <style>
     .main {
         background-color: #f5f7fa;
     }
     .title {
-        font-size: 48px;
+        font-size: 42px;
         font-weight: bold;
         color: #2c3e50;
         text-align: center;
@@ -28,7 +29,7 @@ st.markdown("""
         font-size: 20px;
         color: #34495e;
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 25px;
     }
     .prediction-box {
         padding: 20px;
@@ -43,82 +44,87 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Sidebar
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/1046/1046784.png", width=100)
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Go to", ["Home", "Prediction", "About"])
 
 # Home Page
 if page == "Home":
     st.markdown('<div class="title">🥗 AI-Based Nutrition Deficiency Prediction System</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle">Smart healthcare powered by Machine Learning</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle">Advanced symptom-based healthcare prediction using Machine Learning</div>', unsafe_allow_html=True)
 
     st.write("""
-    ### Key Features:
-    - Symptom-based AI prediction
-    - Personalized nutritional analysis
-    - Health awareness support
-    - User-friendly healthcare dashboard
+    ### Features:
+    - Expanded symptom analysis
+    - Realistic healthcare prediction
+    - AI-powered deficiency detection
+    - Improved predictive model
+    - User-friendly dashboard
     """)
-
-    st.info("This software helps identify potential nutritional deficiencies early for preventive healthcare.")
 
 # Prediction Page
 elif page == "Prediction":
     st.markdown('<div class="title">Nutrition Deficiency Prediction</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle">Fill in your health details below</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
 
     with col1:
         age = st.number_input("Age", min_value=1, max_value=100, value=25)
         gender = st.selectbox("Gender", ["Male", "Female"])
-        fatigue = st.selectbox("Do you experience fatigue?", ["No", "Yes"])
+        fatigue = st.selectbox("Fatigue?", ["No", "Yes"])
         hair_loss = st.selectbox("Hair loss?", ["No", "Yes"])
         bone_pain = st.selectbox("Bone pain?", ["No", "Yes"])
+        weakness = st.selectbox("Weakness?", ["No", "Yes"])
 
     with col2:
-        weakness = st.selectbox("Weakness?", ["No", "Yes"])
         low_sunlight = st.selectbox("Low sunlight exposure?", ["No", "Yes"])
         vegetarian = st.selectbox("Vegetarian diet?", ["No", "Yes"])
         appetite_loss = st.selectbox("Appetite loss?", ["No", "Yes"])
+        dizziness = st.selectbox("Dizziness?", ["No", "Yes"])
+        muscle_cramps = st.selectbox("Muscle cramps?", ["No", "Yes"])
+        skin_dryness = st.selectbox("Skin dryness?", ["No", "Yes"])
+        memory_issues = st.selectbox("Memory issues?", ["No", "Yes"])
 
-    # Convert inputs
-    fatigue_val = 1 if fatigue == "Yes" else 0
-    hair_loss_val = 1 if hair_loss == "Yes" else 0
-    bone_pain_val = 1 if bone_pain == "Yes" else 0
-    weakness_val = 1 if weakness == "Yes" else 0
-    sunlight_val = 1 if low_sunlight == "Yes" else 0
-    vegetarian_val = 1 if vegetarian == "Yes" else 0
-    appetite_val = 1 if appetite_loss == "Yes" else 0
+    # Convert values
+    def yes_no(val):
+        return 1 if val == "Yes" else 0
 
-    # Input dataframe
     input_data = pd.DataFrame([{
         "Age": age,
-        "Fatigue": fatigue_val,
-        "HairLoss": hair_loss_val,
-        "BonePain": bone_pain_val,
-        "Weakness": weakness_val,
-        "LowSunlight": sunlight_val,
-        "Vegetarian": vegetarian_val,
-        "AppetiteLoss": appetite_val,
+        "Fatigue": yes_no(fatigue),
+        "HairLoss": yes_no(hair_loss),
+        "BonePain": yes_no(bone_pain),
+        "Weakness": yes_no(weakness),
+        "LowSunlight": yes_no(low_sunlight),
+        "Vegetarian": yes_no(vegetarian),
+        "AppetiteLoss": yes_no(appetite_loss),
+        "Dizziness": yes_no(dizziness),
+        "MuscleCramps": yes_no(muscle_cramps),
+        "SkinDryness": yes_no(skin_dryness),
+        "MemoryIssues": yes_no(memory_issues),
         "Gender_Female": 1 if gender == "Female" else 0,
         "Gender_Male": 1 if gender == "Male" else 0
     }])
 
+    # Align columns
+    input_data = input_data.reindex(columns=feature_columns, fill_value=0)
+
     if st.button("Predict Deficiency"):
         prediction = model.predict(input_data)[0]
 
-        st.markdown(f'<div class="prediction-box">Predicted Nutritional Deficiency: {prediction}</div>', unsafe_allow_html=True)
+        st.markdown(
+            f'<div class="prediction-box">Predicted Nutritional Deficiency: {prediction}</div>',
+            unsafe_allow_html=True
+        )
 
-        # Severity score
-        symptom_score = sum([
-            fatigue_val, hair_loss_val, bone_pain_val,
-            weakness_val, sunlight_val, vegetarian_val, appetite_val
-        ])
+        # Risk score
+        symptom_score = sum(input_data.iloc[0][[
+            "Fatigue", "HairLoss", "BonePain", "Weakness",
+            "LowSunlight", "Vegetarian", "AppetiteLoss",
+            "Dizziness", "MuscleCramps", "SkinDryness", "MemoryIssues"
+        ]])
 
-        st.progress(min(symptom_score / 7, 1.0))
-
-        st.metric("Risk Score", f"{symptom_score}/7")
+        st.progress(min(symptom_score / 11, 1.0))
+        st.metric("Risk Score", f"{symptom_score}/11")
 
         # Recommendations
         if prediction == "Iron":
@@ -137,10 +143,10 @@ elif page == "About":
     st.markdown('<div class="title">About This Project</div>', unsafe_allow_html=True)
 
     st.write("""
-    ### Project Objective:
-    This AI-powered system predicts nutritional deficiencies using symptom analysis and machine learning.
+    ### Objective:
+    Predict nutritional deficiencies using expanded symptom analysis and machine learning.
 
-    ### Technologies Used:
+    ### Technologies:
     - Python
     - Streamlit
     - Scikit-learn
@@ -153,8 +159,8 @@ elif page == "About":
     - Protein
     - Vitamin B12
 
-    ### Purpose:
-    Early health awareness and preventive nutrition support.
+    ### Benefits:
+    - Preventive healthcare
+    - Early awareness
+    - User-friendly AI diagnosis
     """)
-
-    st.success("Developed as an AI mini project for healthcare innovation.")

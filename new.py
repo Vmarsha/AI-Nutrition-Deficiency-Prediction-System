@@ -4,13 +4,13 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 import pickle
 
-# Load Excel dataset
-df = pd.read_excel("symptom_deficiency_dataset.xlsx")
+# Load improved dataset
+df = pd.read_excel("improved_symptom_deficiency_dataset.xlsx")
 
 # Remove missing rows
 df.dropna(inplace=True)
 
-# Display preview
+# Preview dataset
 print("Dataset Preview:")
 print(df.head())
 
@@ -21,6 +21,9 @@ y = df["Deficiency"]
 # Convert categorical columns
 X = pd.get_dummies(X)
 
+# Save feature columns for app consistency
+feature_columns = X.columns
+
 # Split dataset
 X_train, X_test, y_train, y_test = train_test_split(
     X,
@@ -29,13 +32,13 @@ X_train, X_test, y_train, y_test = train_test_split(
     random_state=42
 )
 
-# Model
+# Improved model
 model = RandomForestClassifier(
-    n_estimators=100,
+    n_estimators=200,
     random_state=42
 )
 
-# Train
+# Train model
 model.fit(X_train, y_train)
 
 # Predict
@@ -46,7 +49,11 @@ accuracy = accuracy_score(y_test, y_pred)
 
 print("\nModel Accuracy:", accuracy)
 
-# Save model
+# Save trained model
 pickle.dump(model, open("model.pkl", "wb"))
 
+# Save feature columns
+pickle.dump(feature_columns, open("feature_columns.pkl", "wb"))
+
 print("Model saved successfully as model.pkl")
+print("Feature columns saved successfully as feature_columns.pkl")
