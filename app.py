@@ -2,54 +2,110 @@ import streamlit as st
 import pickle
 import pandas as pd
 
-# Load trained model
+# Load model
 model = pickle.load(open("model.pkl", "rb"))
 
-# App title
-st.title("AI-Based Nutrition Deficiency Prediction System")
+# Page configuration
+st.set_page_config(
+    page_title="AI-Based Nutrition Deficiency Prediction System",
+    layout="centered"
+)
 
-st.write("Enter your symptoms and lifestyle details below:")
+# Sidebar
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["Home", "Prediction", "About"])
 
-# User inputs
-age = st.number_input("Age", min_value=1, max_value=100, value=25)
-
-gender = st.selectbox("Gender", ["Male", "Female"])
-fatigue = st.selectbox("Fatigue", [0, 1])
-hair_loss = st.selectbox("Hair Loss", [0, 1])
-bone_pain = st.selectbox("Bone Pain", [0, 1])
-weakness = st.selectbox("Weakness", [0, 1])
-low_sunlight = st.selectbox("Low Sunlight Exposure", [0, 1])
-vegetarian = st.selectbox("Vegetarian", [0, 1])
-appetite_loss = st.selectbox("Appetite Loss", [0, 1])
-
-# Prepare input
-input_data = pd.DataFrame([{
-    "Age": age,
-    "Fatigue": fatigue,
-    "HairLoss": hair_loss,
-    "BonePain": bone_pain,
-    "Weakness": weakness,
-    "LowSunlight": low_sunlight,
-    "Vegetarian": vegetarian,
-    "AppetiteLoss": appetite_loss,
-    "Gender_Female": 1 if gender == "Female" else 0,
-    "Gender_Male": 1 if gender == "Male" else 0
-}])
-
-# Prediction
-if st.button("Predict Deficiency"):
-    prediction = model.predict(input_data)
+# Home Page
+if page == "Home":
+    st.title("AI-Based Nutrition Deficiency Prediction System")
+    st.subheader("Predict potential nutritional deficiencies using AI")
     
-    st.success(f"Predicted Nutritional Deficiency: {prediction[0]}")
+    st.write("""
+    ### Features:
+    - Symptom-based prediction
+    - AI-powered deficiency detection
+    - Personalized health insights
+    - Easy-to-use interface
+    """)
 
-    # Basic suggestions
-    if prediction[0] == "Iron":
-        st.info("Suggested focus: Iron-rich foods like spinach, lentils, red meat.")
-    elif prediction[0] == "Vitamin D":
-        st.info("Suggested focus: Sunlight exposure, eggs, fish, fortified dairy.")
-    elif prediction[0] == "Calcium":
-        st.info("Suggested focus: Milk, yogurt, cheese, leafy greens.")
-    elif prediction[0] == "Protein":
-        st.info("Suggested focus: Eggs, legumes, chicken, nuts.")
-    elif prediction[0] == "B12":
-        st.info("Suggested focus: Dairy, eggs, fish, fortified cereals.")
+# Prediction Page
+elif page == "Prediction":
+    st.title("Nutrition Deficiency Prediction")
+
+    st.write("Fill in your health details below:")
+
+    age = st.number_input("Age", min_value=1, max_value=100, value=25)
+
+    gender = st.selectbox("Gender", ["Male", "Female"])
+    fatigue = st.selectbox("Do you experience fatigue?", ["No", "Yes"])
+    hair_loss = st.selectbox("Hair loss?", ["No", "Yes"])
+    bone_pain = st.selectbox("Bone pain?", ["No", "Yes"])
+    weakness = st.selectbox("Weakness?", ["No", "Yes"])
+    low_sunlight = st.selectbox("Low sunlight exposure?", ["No", "Yes"])
+    vegetarian = st.selectbox("Vegetarian diet?", ["No", "Yes"])
+    appetite_loss = st.selectbox("Appetite loss?", ["No", "Yes"])
+
+    # Convert inputs
+    fatigue_val = 1 if fatigue == "Yes" else 0
+    hair_loss_val = 1 if hair_loss == "Yes" else 0
+    bone_pain_val = 1 if bone_pain == "Yes" else 0
+    weakness_val = 1 if weakness == "Yes" else 0
+    sunlight_val = 1 if low_sunlight == "Yes" else 0
+    vegetarian_val = 1 if vegetarian == "Yes" else 0
+    appetite_val = 1 if appetite_loss == "Yes" else 0
+
+    # Input dataframe
+    input_data = pd.DataFrame([{
+        "Age": age,
+        "Fatigue": fatigue_val,
+        "HairLoss": hair_loss_val,
+        "BonePain": bone_pain_val,
+        "Weakness": weakness_val,
+        "LowSunlight": sunlight_val,
+        "Vegetarian": vegetarian_val,
+        "AppetiteLoss": appetite_val,
+        "Gender_Female": 1 if gender == "Female" else 0,
+        "Gender_Male": 1 if gender == "Male" else 0
+    }])
+
+    # Prediction
+    if st.button("Predict Deficiency"):
+        prediction = model.predict(input_data)[0]
+
+        st.success(f"Predicted Nutritional Deficiency: {prediction}")
+
+        # Suggestions
+        if prediction == "Iron":
+            st.info("Possible signs indicate Iron deficiency. Focus on spinach, lentils, beans, red meat, and iron supplements.")
+        elif prediction == "Vitamin D":
+            st.info("Possible Vitamin D deficiency. Increase sunlight exposure, eggs, fish, and fortified dairy.")
+        elif prediction == "Calcium":
+            st.info("Possible Calcium deficiency. Consume milk, yogurt, cheese, almonds, and leafy greens.")
+        elif prediction == "Protein":
+            st.info("Possible Protein deficiency. Increase eggs, legumes, chicken, fish, and nuts.")
+        elif prediction == "B12":
+            st.info("Possible Vitamin B12 deficiency. Focus on dairy, eggs, fish, and fortified cereals.")
+
+# About Page
+elif page == "About":
+    st.title("About This Project")
+
+    st.write("""
+    This AI-based software predicts possible nutritional deficiencies using machine learning.
+
+    ### Technologies Used:
+    - Python
+    - Pandas
+    - Scikit-learn
+    - Streamlit
+
+    ### Deficiencies Covered:
+    - Iron
+    - Vitamin D
+    - Calcium
+    - Protein
+    - Vitamin B12
+
+    ### Objective:
+    Early detection of nutritional deficiencies for preventive healthcare.
+    """)
